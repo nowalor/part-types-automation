@@ -1,6 +1,7 @@
 import pandas as pd
 import json
 import os
+import re
 
 # Load data from ODS file
 def load_ods_data(filepath):
@@ -30,6 +31,11 @@ def get_highest_ids(data):
             ids["swedish_id"] = max(ids["swedish_id"], item["swedish_car_part_types"][0]["id"])
     return ids
 
+# Convert a name to a translation key
+def generate_translation_key(name):
+    # Remove special characters and convert to lowercase
+    return re.sub(r'[^a-z0-9]', '_', name.lower())
+
 # Convert each row of the DataFrame to the required JSON format
 def convert_row_to_json(row, highest_ids):
     highest_ids["main_id"] += 1
@@ -40,6 +46,7 @@ def convert_row_to_json(row, highest_ids):
     return {
         "id": highest_ids["main_id"],
         "name": row["English Sparepart name"],
+        "translation_key": generate_translation_key(row["English Sparepart name"]),
         "german_car_part_types": [
             {
                 "id": highest_ids["german_id"],
@@ -90,10 +97,9 @@ def main(ods_filepath, json_filepath):
     # Load ODS data
     ods_data = load_ods_data(ods_filepath)
 
-        # Print column names for debugging
+    # Print column names for debugging
     print("Column names:", ods_data.columns)
 
-    
     # Append new data to JSON file
     append_to_json_file(json_filepath, ods_data)
 
